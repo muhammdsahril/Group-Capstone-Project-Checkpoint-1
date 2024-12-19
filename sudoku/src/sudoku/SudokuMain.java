@@ -8,36 +8,74 @@
  * 3 - 5026231193 - Jonathan berlianto
 */
 
+
 package sudoku;
 import java.awt.*;
 import javax.swing.*;
-/**
- * The main Sudoku program
- */
+
 public class SudokuMain extends JFrame {
-    private static final long serialVersionUID = 1L;  // to prevent serial warning
+    private static final long serialVersionUID = 1L;
 
-    // private variables
-    GameBoardPanel board = new GameBoardPanel();
-    JButton btnNewGame = new JButton("New Game");
+    private GameBoardPanel board = new GameBoardPanel();
+    private JButton btnNewGame = new JButton("New Game");
+    private JButton btnHint = new JButton("Hint");
+    private JLabel timerLabel = new JLabel("Time: 00:00", JLabel.CENTER);
 
-   // Constructor
+    private Timer timer;
+    private int timeElapsed;
+
     public SudokuMain() {
-      Container cp = getContentPane();
-      cp.setLayout(new BorderLayout());
+        Container cp = getContentPane();
+        cp.setLayout(new BorderLayout());
 
-      cp.add(board, BorderLayout.CENTER);
+        cp.add(board, BorderLayout.CENTER);
 
-      // Add a button to the south to re-start the game via board.newGame()
-      btnNewGame.addActionListener(e -> board.newGame());
-      cp.add(btnNewGame, BorderLayout.SOUTH);
+        JPanel controlPanel = new JPanel(new GridLayout(1, 3));
+        controlPanel.add(btnNewGame);
+        controlPanel.add(btnHint);
+        controlPanel.add(timerLabel);
 
-      // Initialize the game board to start the game
-      board.newGame();
+        cp.add(controlPanel, BorderLayout.SOUTH);
 
-      pack();     // Pack the UI components, instead of using setSize()
-      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // to handle window-closing
-      setTitle("Sudoku");
-      setVisible(true);
+        btnNewGame.addActionListener(e -> startNewGame());
+        btnHint.addActionListener(e -> giveHint());
+
+        startNewGame();
+
+        pack();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Sudoku");
+        setVisible(true);
+    }
+
+    private void startNewGame() {
+        board.newGame();
+        timeElapsed = 0;
+        updateTimerLabel();
+        if (timer != null) {
+            timer.stop();
+        }
+        timer = new Timer(1000, e -> {
+            timeElapsed++;
+            updateTimerLabel();
+        });
+        timer.start();
+    }
+
+    private void giveHint() {
+        boolean hintGiven = board.giveHint();
+        if (!hintGiven) {
+            JOptionPane.showMessageDialog(this, "No more hints available!");
+        }
+        if (board.isSolved()) {
+            timer.stop();
+            JOptionPane.showMessageDialog(this, "Congratulations! You have solved the puzzle!");
+        }
+    }
+
+    private void updateTimerLabel() {
+        int minutes = timeElapsed / 60;
+        int seconds = timeElapsed % 60;
+        timerLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
     }
 }
